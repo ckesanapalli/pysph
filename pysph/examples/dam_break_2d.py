@@ -27,12 +27,12 @@ from pysph.tools.geometry import get_2d_tank, get_2d_block
 
 
 fluid_column_height = 2.0
-fluid_column_width = 1.0
+fluid_column_width = 4.0
 container_height = 4.0
 container_width = 4.0
 nboundary_layers = 2
 nu = 0.0
-dx = 0.03
+dx = 0.04
 g = 9.81
 ro = 1000.0
 vref = np.sqrt(2 * 9.81 * fluid_column_height)
@@ -166,7 +166,7 @@ class DamBreak2D(Application):
             c0=co, rho0=ro, alpha=0.05, gy=-g, pref=ro*co**2,
             internal_flow=False, hg_correction=True, gtvf=True, symmetric=True
         )
-        s = SchemeChooser(default='wcsph', wcsph=wcsph, aha=aha, edac=edac,
+        s = SchemeChooser(default='iisph', wcsph=wcsph, aha=aha, edac=edac,
                           iisph=iisph, gtvf=gtvf, sisph=sisph)
         return s
 
@@ -216,13 +216,13 @@ class DamBreak2D(Application):
             nfluid_offset = 1
             wall_hex_pack = False
         xt, yt = get_2d_tank(dx=self.dx, length=container_width,
-                             height=container_height, base_center=[2, 0],
+                             height=container_height, base_center=[0, 0],
                              num_layers=nboundary_layers)
-        xf, yf = get_2d_block(dx=self.dx, length=fluid_column_width,
-                              height=fluid_column_height, center=[0.5, 1])
+        xf, yf = get_2d_block(dx=self.dx, length=fluid_column_width-5*self.dx/2,
+                              height=fluid_column_height, center=[0, fluid_column_height/2+self.dx])
 
-        xf += self.dx
-        yf += self.dx
+        # xf += self.dx/2
+        # yf += self.dx
 
         fluid = get_particle_array(name='fluid', x=xf, y=yf, h=h, m=m, rho=ro)
         boundary = get_particle_array(name='boundary', x=xt, y=yt, h=h, m=m,
@@ -232,7 +232,8 @@ class DamBreak2D(Application):
         if self.options.scheme == 'iisph':
             # the default position tends to cause the particles to be pushed
             # away from the wall, so displacing it by a tiny amount helps.
-            fluid.x += self.dx / 4
+            # fluid.x += self.dx / 4
+            pass
 
         # Adding extra properties for kernel correction
         corr = self.kernel_corr
